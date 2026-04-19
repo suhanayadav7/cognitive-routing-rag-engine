@@ -1,24 +1,28 @@
-# agent-system
+# cognitive-routing-rag-engine
 
-A mini agent registry + usage tracking API built with FastAPI.
+Vector-based persona routing, LangGraph autonomous content generation, and RAG-powered debate engine with prompt injection defense — built on ChromaDB, LangChain, and Groq LLaMA.
 
-## setup
+## Setup
 
 ```bash
-pip install fastapi uvicorn
-uvicorn main:app --reload
+git clone https://github.com/suhanayadav7/cognitive-routing-rag-engine
+cd cognitive-routing-rag-engine
+pip install -r requirements.txt
+cp .env.example .env  # add your Groq API key
+python main.py
 ```
 
-visit http://127.0.0.1:8000/docs to test all endpoints interactively.
+## Phases
 
----
+**Phase 1 – Vector Persona Router**: Embeds 3 bot personas into ChromaDB. Routes incoming posts to relevant bots using cosine similarity.
 
-## design questions
+**Phase 2 – LangGraph Content Engine**: 3-node state machine (decide_search → web_search → draft_post). Each bot researches a topic and generates a structured JSON tweet.
 
-### 1. billing without double charging?
+**Phase 3 – RAG Combat Engine**: Full thread context injected as RAG prompt. Bot defends its position against human replies. Includes prompt injection defense via system-level persona immutability rules.
 
-The `request_id` idempotency check already handles duplicate usage events at the logging level. For billing I'd persist each `request_id` in a DB with a `billed` boolean. Before charging, query only unbilled entries, process them, then flip the flag in the same transaction. That way even if the same event comes in twice, it only gets billed once.
+## Tech Stack
 
-### 2. storage at 100K agents?
-
-In-memory breaks down pretty fast. I'd move to SQLite first (good enough up to maybe 10K agents), then PostgreSQL for anything larger. The search endpoint would need a proper full-text index on `name` and `description` — otherwise it's just a full table scan which won't scale. Usage logs would go into a separate table with a foreign key to agents so I can do `GROUP BY target` instead of looping in Python.
+- ChromaDB (vector store)
+- LangChain + LangGraph (orchestration)
+- Groq LLaMA 3.3 70B (LLM)
+- Python 3.11
